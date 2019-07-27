@@ -48,4 +48,26 @@ var _ = Describe("GoPubsub", func() {
 			})
 		})
 	})
+
+	Describe("When broadcasting to 2 people", func() {
+		var larry *Listener
+		var leonard *Listener
+		BeforeEach(func() {
+			larry = BirthListener("larry")
+			leonard = BirthListener("leonard")
+			go larry.Listen(aaron)
+			go leonard.Listen(aaron)
+		})
+		Describe("When broadcasting 5 times", func() {
+			BeforeEach(func(done Done) {
+				for i := 0; i < 5; i++ {
+					aaron.Shout(fmt.Sprintf("hey x%v", i))
+				}
+				done <- true
+			}, 1)
+			It("Should have Larry hear 5 messages.", func() {
+				Expect(larry.HeardMessages).To(Equal(5))
+			})
+		})
+	})
 })
