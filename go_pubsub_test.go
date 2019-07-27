@@ -10,13 +10,14 @@ import (
 )
 
 var _ = Describe("GoPubsub", func() {
+	var aaron *Broadcaster
+	BeforeEach(func() {
+		aaron = BirthBroadcaster("aaron")
+	})
+
 	Describe("When broadcasting to one person", func() {
-		var (
-			aaron *Broadcaster
-			larry *Listener
-		)
+		var larry *Listener
 		BeforeEach(func() {
-			aaron = BirthBroadcaster("aaron")
 			larry = BirthListener("larry")
 			go larry.Listen(aaron)
 		})
