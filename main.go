@@ -14,6 +14,7 @@ type Broadcaster struct {
 	name       string
 	speakers   []chan string
 	microphone chan string
+	started    bool
 	// mics []
 }
 
@@ -22,28 +23,42 @@ func (b *Broadcaster) WireupSoundSystem() {
 	go func() {
 		for msg := range b.microphone {
 			color.HiBlack("........internal system: %s", msg)
+			if len(b.speakers) == 0 {
+				color.HiRed("No speakers detected. Adding message back into mic")
+				b.microphone <- msg
+				return
+			}
 			for i := range b.speakers {
 				color.HiBlack("........found speaker #%v", i)
-				go b.BlastThatSpeaker(b.speakers[i], msg)
+				go b.BlastThatSpeaker(b.speakers[i], msg, i)
 			}
 		}
 	}()
 }
 
-func (b *Broadcaster) BlastThatSpeaker(s chan string, msg string) {
+func (b *Broadcaster) BlastThatSpeaker(s chan string, msg string, speakerNum int) {
 	select {
 	case s <- msg:
-		color.HiBlack("........A speaker went through ")
+		color.HiBlack("........speaker #%v went through with message: %s", speakerNum, msg)
 	case <-time.After(timeout):
-		color.HiBlack("........This speaker appears to be broken.")
+		color.HiRed("........speaker #%v appears to be broken. message: %s", speakerNum, msg)
 		// close(s)
 	}
+}
+
+func (b *Broadcaster) StartSoundSystem() {
+	if len(b.speakers) == 0 {
+		// b.StopSoundSystem()
+		return
+	}
+	b.WireupSoundSystem()
 }
 
 //Megaphone returns a stream of messages.
 func (b *Broadcaster) Megaphone() <-chan string {
 	newSpeaker := make(chan string)
 	b.speakers = append(b.speakers, newSpeaker)
+	b.StartSoundSystem()
 	return newSpeaker
 }
 
@@ -56,7 +71,6 @@ func (b *Broadcaster) Shout(msg string) {
 	case <-time.After(timeout):
 		color.Magenta("%s: ...and nobody heard me. I guess I'm just talking to myself, as usual :(.", b.name)
 		close(b.microphone)
-		b.microphone = nil
 	}
 }
 
@@ -68,7 +82,7 @@ func BirthBroadcaster(name string) *Broadcaster {
 		speakers:   make([]chan string, 0),
 		microphone: make(chan string),
 	}
-	b.WireupSoundSystem()
+	b.StartSoundSystem()
 	return &b
 }
 

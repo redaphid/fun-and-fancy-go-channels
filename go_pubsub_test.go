@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,18 +23,18 @@ var _ = Describe("GoPubsub", func() {
 			go larry.Listen(aaron)
 		})
 		Describe("When broadcasting 5 times", func() {
-			BeforeEach(func(done Done) {
+			BeforeEach(func() {
 				for i := 0; i < 5; i++ {
 					aaron.Shout(fmt.Sprintf("hey x%v", i))
 				}
-				done <- true
-			}, 1)
+				<-time.After(500 * time.Millisecond)
+			})
 			It("Should have Larry hear 5 messages.", func() {
 				Expect(larry.HeardMessages).To(Equal(5))
 			})
 		})
 		Describe("When broadcasting 10 times, but says 'bye!' on message #3", func() {
-			BeforeEach(func(done Done) {
+			BeforeEach(func() {
 				for i := 0; i < 10; i++ {
 					if i == 2 {
 						aaron.Shout("bye!")
@@ -41,8 +42,8 @@ var _ = Describe("GoPubsub", func() {
 					}
 					aaron.Shout(fmt.Sprintf("hey x%v", i))
 				}
-				done <- true
-			}, 1)
+				<-time.After(500 * time.Millisecond)
+			})
 			It("Should have Larry hear 3 messages.", func() {
 				Expect(larry.HeardMessages).To(Equal(3))
 			})
@@ -59,12 +60,12 @@ var _ = Describe("GoPubsub", func() {
 			go leonard.Listen(aaron)
 		})
 		Describe("When broadcasting 5 times", func() {
-			BeforeEach(func(done Done) {
+			BeforeEach(func() {
 				for i := 0; i < 5; i++ {
 					aaron.Shout(fmt.Sprintf("hey x%v", i))
 				}
-				done <- true
-			}, 1)
+				<-time.After(500 * time.Millisecond)
+			})
 			It("Should have Larry hear 5 messages.", func() {
 				Expect(larry.HeardMessages).To(Equal(5))
 			})
