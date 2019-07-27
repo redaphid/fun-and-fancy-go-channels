@@ -31,5 +31,19 @@ var _ = Describe("GoPubsub", func() {
 				Expect(larry.HeardMessages).To(Equal(5))
 			})
 		})
+		Describe("When broadcasting 10 times, but says 'bye!' on message #3", func() {
+			BeforeEach(func() {
+				for i := 0; i < 10; i++ {
+					if i == 2 {
+						aaron.Shout("bye!")
+						continue
+					}
+					aaron.Shout(fmt.Sprintf("hey x%v", i))
+				}
+			})
+			It("Should have Larry hear 3 messages.", func() {
+				Expect(larry.HeardMessages).To(Equal(3))
+			})
+		})
 	})
 })
