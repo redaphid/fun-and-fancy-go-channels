@@ -6,21 +6,35 @@ import (
 )
 
 //Broadcaster is a guy who shouts into his megaphone
-type Broadcaster struct {
+type broadcaster struct {
+	name      string
+	megaphone chan string
 }
 
-//Megaphone is the thing Broadcaster uses to yell.
-func (b *Broadcaster) Megaphone(msg string) {
+//Shout makes the broadcaster shout
+func (b *broadcaster) Shout(msg string) {
+	b.Megaphone <- msg
+}
 
+//BirthBroadcaster births a new...broadcaster
+func BirthBroadcaster(name string) *broadcaster {
+	log.Printf("%s, a broadcaster, announces it's own birth", name)
+	return &broadcaster{
+		megaphone: make(chan string),
+	}
 }
 
 //Listener likes to listen to broadcaster, for some reason.
-type Listener struct {
-}
+type Listener struct{}
 
 const watchCount = 1
 
 func main() {
+	fmt.Println("Starting up")
+	aaron := BirthBroadcaster("aaron")
+}
+
+func example() {
 
 	fmt.Println("Starting up")
 	a := make(chan bool)
@@ -42,5 +56,4 @@ func main() {
 	}()
 	a <- false
 	b <- true
-
 }
