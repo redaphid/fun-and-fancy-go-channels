@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 )
 
 //Broadcaster is a guy who shouts into his megaphone
@@ -22,5 +23,14 @@ const watchCount = 1
 func main() {
 
 	fmt.Println("Starting up")
-
+	a := make(chan bool)
+	b := make(chan bool)
+	select {
+	case res := <-a:
+		log.Printf("a: %v", res)
+	case <-b:
+		log.Printf("b: %v", res)
+	}
+	a <- true
+	b <- false
 }
