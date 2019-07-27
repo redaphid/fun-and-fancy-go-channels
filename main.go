@@ -45,13 +45,16 @@ func BirthListener(name string) *Listener {
 type Listener struct {
 	name          string
 	HeardMessages int
+	letsListen    bool
 }
 
 //Listen listens to the Broadcaster
 func (l *Listener) Listen(b *Broadcaster) {
+	l.letsListen = true
 	color.Green("%s: Alright, I'm listening", l.name)
 	megaphone := b.Megaphone()
-	for {
+	for l.letsListen {
+		log.Printf("beginning of loop")
 		select {
 		case msg := <-megaphone:
 			l.HeardMessages++
@@ -61,13 +64,14 @@ func (l *Listener) Listen(b *Broadcaster) {
 			return
 		}
 	}
-	panic("what the hell am I doing here? I don't belong here.")
+	color.Green("%s, a Listener, politely leaves the room.", l.name)
 }
 
 func (l *Listener) talkAboutIt(msg string) {
 	color.Green("%s: msg#%v: %s", l.name, l.HeardMessages, msg)
 	if msg == "bye!" {
 		color.Yellow("%s: I guess I should stop listening.", l.name)
+		l.letsListen = false
 	}
 }
 
