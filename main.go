@@ -42,19 +42,25 @@ type listener struct {
 
 func (l *listener) Listen(b *broadcaster) {
 	log.Printf("%s: Alright, I'm listening", l.name)
-	for msg := range <-b.Megaphone() {
-		log.Printf("%s: I heard %s!", l.name, msg)
+	for {
+		msg := <-b.Megaphone()
+		log.Printf("%s: I heard \"%s\". How boring", l.name, msg)
 	}
+	log.Printf("%s: I guess I'm done listening now.", l.name)
 }
 
 const watchCount = 1
+const shoutTimes = 5
 
 func main() {
 	fmt.Println("Starting up")
 	aaron := BirthBroadcaster("aaron")
 	larry := BirthListener("larry")
 	go larry.Listen(aaron)
-	aaron.Shout("I am Aaron!")
+	for i := 0; i < shoutTimes; i++ {
+		aaron.Shout(fmt.Sprintf("I am Aaron. I've told you like %v times.", i))
+	}
+	aaron.Shout("Ok, I'm bored with shouting. Guess I need to find something else to do.")
 }
 
 func example() {
