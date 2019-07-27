@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
+
+	"github.com/fatih/color"
 )
 
 //Broadcaster is a guy who shouts into his megaphone
@@ -22,7 +25,7 @@ func (b *broadcaster) Shout(msg string) {
 
 //BirthBroadcaster births a new...broadcaster
 func BirthBroadcaster(name string) *broadcaster {
-	log.Printf("%s, a broadcaster, announces it's own birth", name)
+	color.Red("%s, a broadcaster, announces it's own birth", name)
 	return &broadcaster{
 		name:      name,
 		megaphone: make(chan string),
@@ -30,7 +33,7 @@ func BirthBroadcaster(name string) *broadcaster {
 }
 
 func BirthListener(name string) *listener {
-	log.Printf("%s, a listener, politely enters the room.", name)
+	color.Green("%s, a listener, politely enters the room.", name)
 	return &listener{
 		name: name,
 	}
@@ -41,12 +44,18 @@ type listener struct {
 }
 
 func (l *listener) Listen(b *broadcaster) {
-	log.Printf("%s: Alright, I'm listening", l.name)
-	for {
-		msg := <-b.Megaphone()
-		log.Printf("%s: I heard \"%s\". How boring", l.name, msg)
+	color.Green("%s: Alright, I'm listening", l.name)
+	megaphone := b.Megaphone()
+	i := 0
+	for msg := range megaphone {
+		i++
+		color.Blue("%s: msg#%v: %s", l.name, i, msg)
+		if msg == "bye!" {
+			color.Yellow("%s: I guess I should stop listening.", l.name)
+			break
+		}
 	}
-	log.Printf("%s: I guess I'm done listening now.", l.name)
+	log.Printf("%s: Goodbye, world!.", l.name)
 }
 
 const watchCount = 1
@@ -58,31 +67,8 @@ func main() {
 	larry := BirthListener("larry")
 	go larry.Listen(aaron)
 	for i := 0; i < shoutTimes; i++ {
-		aaron.Shout(fmt.Sprintf("I am Aaron. I've told you like %v times.", i))
+		aaron.Shout(fmt.Sprintf("hey x%v", i))
+		time.Sleep(100 * time.Millisecond)
 	}
-	aaron.Shout("Ok, I'm bored with shouting. Guess I need to find something else to do.")
-}
-
-func example() {
-
-	fmt.Println("Starting up")
-	a := make(chan bool)
-	b := make(chan bool)
-	go func() {
-		for {
-			select {
-			case res := <-a:
-				log.Printf("a: %v", res)
-			case res := <-b:
-				log.Printf("b: %v", res)
-			default:
-				log.Println("We're done!")
-				return
-			}
-			log.Println("Looping")
-		}
-		log.Println("exited loop")
-	}()
-	a <- false
-	b <- true
+	aaron.Shout("bye!")
 }
