@@ -25,6 +25,7 @@ var _ = Describe("GoPubsub", func() {
 				for i := 0; i < 5; i++ {
 					aaron.Shout(fmt.Sprintf("hey x%v", i))
 				}
+				// log.Println("Done broadcasting.")
 			})
 			It("Should have Larry hear 5 messages.", func() {
 				Expect(larry.HeardMessages).To(Equal(5))
