@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/fatih/color"
@@ -40,22 +39,35 @@ func BirthListener(name string) *listener {
 }
 
 type listener struct {
-	name string
+	name         string
+	messageCount int
 }
 
 func (l *listener) Listen(b *broadcaster) {
 	color.Green("%s: Alright, I'm listening", l.name)
 	megaphone := b.Megaphone()
-	i := 0
-	for msg := range megaphone {
-		i++
-		color.Blue("%s: msg#%v: %s", l.name, i, msg)
-		if msg == "bye!" {
-			color.Yellow("%s: I guess I should stop listening.", l.name)
-			break
+	for {
+		select {
+		case msg := <-megaphone:
+			l.messageCount++
+			l.talkAboutIt(msg)
+		case <-time.After(1 * time.Second):
+			l.complainAboutBoredom()
+			return
 		}
 	}
-	log.Printf("%s: Goodbye, world!.", l.name)
+	panic("what the hell am I doing here? I don't belong here.")
+}
+
+func (l *listener) talkAboutIt(msg string) {
+	color.Blue("%s: msg#%v: %s", l.name, l.messageCount, msg)
+	if msg == "bye!" {
+		color.Yellow("%s: I guess I should stop listening.", l.name)
+	}
+}
+
+func (l *listener) complainAboutBoredom() {
+	color.Blue("%s got bored after %v messages", l.name, l.messageCount)
 }
 
 const watchCount = 1
@@ -68,6 +80,7 @@ func main() {
 	go larry.Listen(aaron)
 	for i := 0; i < shoutTimes; i++ {
 		aaron.Shout(fmt.Sprintf("hey x%v", i))
+		time.Sleep(100)
 	}
 	aaron.Shout("bye!")
 	time.Sleep(100 * time.Millisecond)
