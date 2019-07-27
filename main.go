@@ -25,12 +25,22 @@ func main() {
 	fmt.Println("Starting up")
 	a := make(chan bool)
 	b := make(chan bool)
-	select {
-	case res := <-a:
-		log.Printf("a: %v", res)
-	case <-b:
-		log.Printf("b: %v", res)
-	}
-	a <- true
-	b <- false
+	go func() {
+		for {
+			select {
+			case res := <-a:
+				log.Printf("a: %v", res)
+			case res := <-b:
+				log.Printf("b: %v", res)
+			default:
+				log.Println("We're done!")
+				return
+			}
+			log.Println("Looping")
+		}
+		log.Println("exited loop")
+	}()
+	a <- false
+	b <- true
+
 }
