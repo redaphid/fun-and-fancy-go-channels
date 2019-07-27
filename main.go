@@ -68,7 +68,7 @@ func main() {
 	go larry.Listen(aaron)
 	for i := 0; i < shoutTimes; i++ {
 		aaron.Shout(fmt.Sprintf("hey x%v", i))
-		time.Sleep(100 * time.Millisecond)
 	}
 	aaron.Shout("bye!")
+	time.Sleep(100 * time.Millisecond)
 }
