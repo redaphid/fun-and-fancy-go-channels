@@ -21,7 +21,18 @@ func (b *Broadcaster) Megaphone() <-chan string {
 //Shout makes the Broadcaster shout
 func (b *Broadcaster) Shout(msg string) {
 	color.Magenta("%s shouts: %s", b.name, msg)
-	b.megaphone <- msg
+	if b.megaphone == nil {
+		color.Magenta("%s: time to build a whole new megaphone from scratch!", b.name)
+		b.megaphone = make(chan string)
+	}
+	select {
+	case b.megaphone <- msg:
+		color.Magenta("%s ...and someone heard me!", b.name)
+	case <-time.After(10 * time.Millisecond):
+		color.Magenta("%s: ...and nobody heard me. I guess I'm just talking to myself, as usual :(.", b.name)
+		close(b.megaphone)
+		b.megaphone = nil
+	}
 }
 
 //BirthBroadcaster births a new...Broadcaster
@@ -54,7 +65,6 @@ func (l *Listener) Listen(b *Broadcaster) {
 	color.Green("%s: Alright, I'm listening", l.name)
 	megaphone := b.Megaphone()
 	for l.letsListen {
-		log.Printf("beginning of loop")
 		select {
 		case msg := <-megaphone:
 			l.HeardMessages++
