@@ -7,41 +7,69 @@ import (
 	"github.com/fatih/color"
 )
 
+const timeout = 100 * time.Millisecond
+
 //Broadcaster is a guy who shouts into his megaphone
 type Broadcaster struct {
-	name      string
-	megaphone chan string
+	name       string
+	speakers   []chan string
+	microphone chan string
+	// mics []
+}
+
+//WireupSoundSystem is the insane engineer who decided to do this the hard way.
+func (b *Broadcaster) WireupSoundSystem() {
+	go func() {
+		for msg := range b.microphone {
+			color.HiBlack("........internal system: %s", msg)
+			for i := range b.speakers {
+				color.HiBlack("........found speaker #%v", i)
+				go b.BlastThatSpeaker(b.speakers[i], msg)
+			}
+		}
+	}()
+}
+
+func (b *Broadcaster) BlastThatSpeaker(s chan string, msg string) {
+	select {
+	case s <- msg:
+		color.HiBlack("........A speaker went through ")
+	case <-time.After(timeout):
+		color.HiBlack("........This speaker appears to be broken.")
+		// close(s)
+	}
 }
 
 //Megaphone returns a stream of messages.
 func (b *Broadcaster) Megaphone() <-chan string {
-	return b.megaphone
+	newSpeaker := make(chan string)
+	b.speakers = append(b.speakers, newSpeaker)
+	return newSpeaker
 }
 
 //Shout makes the Broadcaster shout
 func (b *Broadcaster) Shout(msg string) {
 	color.Magenta("%s shouts: %s", b.name, msg)
-	if b.megaphone == nil {
-		color.Magenta("%s: time to build a whole new megaphone from scratch!", b.name)
-		b.megaphone = make(chan string)
-	}
 	select {
-	case b.megaphone <- msg:
+	case b.microphone <- msg:
 		color.Magenta("%s ...and someone heard me!", b.name)
-	case <-time.After(10 * time.Millisecond):
+	case <-time.After(timeout):
 		color.Magenta("%s: ...and nobody heard me. I guess I'm just talking to myself, as usual :(.", b.name)
-		close(b.megaphone)
-		b.megaphone = nil
+		close(b.microphone)
+		b.microphone = nil
 	}
 }
 
 //BirthBroadcaster births a new...Broadcaster
 func BirthBroadcaster(name string) *Broadcaster {
 	color.Magenta("%s, a Broadcaster, announces it's own birth", name)
-	return &Broadcaster{
-		name:      name,
-		megaphone: make(chan string),
+	b := Broadcaster{
+		name:       name,
+		speakers:   make([]chan string, 0),
+		microphone: make(chan string),
 	}
+	b.WireupSoundSystem()
+	return &b
 }
 
 //BirthListener gives birth to a listener
