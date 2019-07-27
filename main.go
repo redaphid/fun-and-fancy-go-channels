@@ -11,27 +11,50 @@ type broadcaster struct {
 	megaphone chan string
 }
 
+func (b *broadcaster) Megaphone() <-chan string {
+	return b.megaphone
+}
+
 //Shout makes the broadcaster shout
 func (b *broadcaster) Shout(msg string) {
-	b.Megaphone <- msg
+	b.megaphone <- msg
 }
 
 //BirthBroadcaster births a new...broadcaster
 func BirthBroadcaster(name string) *broadcaster {
 	log.Printf("%s, a broadcaster, announces it's own birth", name)
 	return &broadcaster{
+		name:      name,
 		megaphone: make(chan string),
 	}
 }
 
-//Listener likes to listen to broadcaster, for some reason.
-type Listener struct{}
+func BirthListener(name string) *listener {
+	log.Printf("%s, a listener, politely enters the room.", name)
+	return &listener{
+		name: name,
+	}
+}
+
+type listener struct {
+	name string
+}
+
+func (l *listener) Listen(b *broadcaster) {
+	log.Printf("%s: Alright, I'm listening", l.name)
+	for msg := range <-b.Megaphone() {
+		log.Printf("%s: I heard %s!", l.name, msg)
+	}
+}
 
 const watchCount = 1
 
 func main() {
 	fmt.Println("Starting up")
 	aaron := BirthBroadcaster("aaron")
+	larry := BirthListener("larry")
+	go larry.Listen(aaron)
+	aaron.Shout("I am Aaron!")
 }
 
 func example() {
