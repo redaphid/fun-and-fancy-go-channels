@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -11,9 +12,15 @@ import (
 )
 
 var _ = Describe("GoPubsub", func() {
+	testLog := color.New(color.FgBlack).Add(color.BgWhite)
 	var aaron *Broadcaster
 	BeforeEach(func() {
+		testLog.Print("And so it begins")
 		aaron = BirthBroadcaster("aaron")
+	})
+
+	AfterEach(func() {
+		testLog.Print("And so it ends")
 	})
 
 	Describe("When broadcasting to one person", func() {
@@ -34,18 +41,25 @@ var _ = Describe("GoPubsub", func() {
 			})
 		})
 		Describe("When broadcasting 10 times, but says 'bye!' on message #3", func() {
-			BeforeEach(func() {
-				for i := 0; i < 10; i++ {
+			BeforeEach(func(done Done) {
+				i := 0
+				for {
 					if i == 2 {
 						aaron.Shout("bye!")
 						continue
 					}
-					aaron.Shout(fmt.Sprintf("hey x%v", i))
+					isAaronOk := aaron.Shout(fmt.Sprintf("hey x%v", i))
+					color.Green("Aaron is fine.")
+					if !isAaronOk {
+						break
+					}
+					i = i + 1
 				}
-				<-time.After(500 * time.Millisecond)
-			})
-			It("Should have Larry hear 3 messages.", func() {
-				Expect(larry.HeardMessages).To(Equal(3))
+				close(done)
+			}, 1)
+			It("Should have Larry hear 3ish messages.", func() {
+				Expect(larry.HeardMessages).To(BeNumerically("<", 6))
+				Expect(larry.HeardMessages).To(BeNumerically(">", 1))
 			})
 		})
 	})
@@ -68,6 +82,9 @@ var _ = Describe("GoPubsub", func() {
 			})
 			It("Should have Larry hear 5 messages.", func() {
 				Expect(larry.HeardMessages).To(Equal(5))
+			})
+			It("Should have Leonard hear 5 messages.", func() {
+				Expect(leonard.HeardMessages).To(Equal(5))
 			})
 		})
 	})
